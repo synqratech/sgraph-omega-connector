@@ -1,4 +1,4 @@
-# sgraph-omega-connector
+# SGraph Send × Omega Walls Connector
 
 [![Contract](https://img.shields.io/badge/contract-OpenAPI%20v1-blue)](contracts/openapi/connector-v1.yaml)
 [![Runtime](https://img.shields.io/badge/runtime-FastAPI-009688)](connector/)
@@ -6,7 +6,7 @@
 [![Security](https://img.shields.io/badge/auth-API%20Key%20%2B%20HMAC-critical)](docs/CONTRACT.md)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-Integration micro-repository that connects SGraph Send and Omega Walls without changing core upstream codebases.
+Connector repository between [SGraph Send](https://github.com/the-cyber-boardroom/SGraph-AI__App__Send) and [Omega Walls](https://github.com/synqratech/omega-walls), without changing either upstream codebase.
 
 ## Why this repo exists
 
