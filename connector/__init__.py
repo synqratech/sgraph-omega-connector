@@ -1,0 +1,1 @@
+"""SGraph <-> Omega connector package."""

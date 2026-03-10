@@ -1,0 +1,99 @@
+name: sgraph-omega-connector-local
+
+services:
+  connector:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    env_file:
+      - ../../env/.env.local.example
+    environment:
+      CONNECTOR_HOST: ${CONNECTOR_HOST:-0.0.0.0}
+      CONNECTOR_PORT: ${CONNECTOR_PORT:-18080}
+    expose:
+      - "18080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18080/healthz', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - integration
+
+  omega-api:
+    build:
+      context: ../omega
+      dockerfile: Dockerfile
+    working_dir: /workspace/omega-src
+    volumes:
+      - ${OMEGA_REPO_PATH:-../../../omega-repo}:/workspace/omega-src
+    env_file:
+      - ../../env/.env.local.example
+    environment:
+      OMEGA_API_HMAC_SECRET: ${OMEGA_HMAC_SECRET:-local-omega-hmac}
+      OMEGA_UVICORN_WORKERS: ${OMEGA_UVICORN_WORKERS:-2}
+      OMEGA_OMP_NUM_THREADS: ${OMEGA_OMP_NUM_THREADS:-1}
+      OMEGA_OPENBLAS_NUM_THREADS: ${OMEGA_OPENBLAS_NUM_THREADS:-1}
+      OMP_NUM_THREADS: ${OMEGA_OMP_NUM_THREADS:-1}
+      OPENBLAS_NUM_THREADS: ${OMEGA_OPENBLAS_NUM_THREADS:-1}
+      PYTHONUNBUFFERED: "1"
+    restart: unless-stopped
+    command: >
+      bash -lc "uvicorn omega.api.server:create_app --factory --host 0.0.0.0 --port 8080 --workers ${OMEGA_UVICORN_WORKERS:-2} --proxy-headers --forwarded-allow-ips '*'"
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=3)"]
+      interval: 15s
+      timeout: 8s
+      retries: 10
+      start_period: 20s
+    networks:
+      - integration
+
+  sgraph-user-api:
+    image: python:3.12-slim
+    working_dir: /workspace/sgraph-src
+    volumes:
+      - ${SGRAPH_REPO_PATH:-../../../sgraph-repo}:/workspace/sgraph-src
+    environment:
+      PYTHONUNBUFFERED: "1"
+      SGRAPH_SEND__ACCESS_TOKEN: dev-local-token
+      SGRAPH_CONNECTOR_ENABLED: "true"
+      SGRAPH_CONNECTOR_BASE_URL: http://connector:18080
+      SGRAPH_CONNECTOR_API_KEY: ${CONNECTOR_API_KEYS:-local-connector-key}
+      SGRAPH_CONNECTOR_HMAC_SECRET: ${CONNECTOR_HMAC_SECRET:-local-connector-hmac}
+      SGRAPH_CONNECTOR_TIMEOUT_SEC: "30"
+      SGRAPH_CONNECTOR_TLS_VERIFY: "false"
+    command: >
+      bash -lc "pip install --no-cache-dir poetry &&
+      poetry install &&
+      poetry run uvicorn sgraph_ai_app_send.lambda__user.lambda_function.lambda_handler__user:app --host 0.0.0.0 --port 10062"
+    expose:
+      - "10062"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:10062/api/docs', timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    networks:
+      - integration
+
+  reverse-proxy:
+    build:
+      context: ../proxy
+      dockerfile: Dockerfile
+    volumes:
+      - ../proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - connector
+      - omega-api
+      - sgraph-user-api
+    ports:
+      - "8088:8088"
+    networks:
+      - integration
+
+networks:
+  integration:
+    driver: bridge

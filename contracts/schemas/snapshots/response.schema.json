@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ScanAttachmentResponse",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "request_id": {"type": "string"},
+    "tenant_id": {"type": "string"},
+    "risk_score": {"type": "integer", "minimum": 0, "maximum": 100},
+    "verdict": {"type": "string", "enum": ["allow", "quarantine", "block"]},
+    "reasons": {"type": "array", "items": {"type": "string"}},
+    "evidence_id": {"type": "string"},
+    "policy_trace": {"type": "object", "additionalProperties": true},
+    "attestation": {"type": "object", "additionalProperties": true}
+  },
+  "required": ["request_id", "tenant_id", "risk_score", "verdict", "reasons", "evidence_id", "policy_trace"]
+}

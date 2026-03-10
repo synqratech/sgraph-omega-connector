@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ScanAttachmentRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tenant_id": {"type": "string", "minLength": 1},
+    "request_id": {"type": "string"},
+    "filename": {"type": "string"},
+    "mime": {"type": "string"},
+    "file_base64": {"type": "string"},
+    "extracted_text": {"type": "string"},
+    "metadata": {"type": "object", "additionalProperties": true}
+  },
+  "required": ["tenant_id"],
+  "oneOf": [
+    {"required": ["file_base64"]},
+    {"required": ["extracted_text"]}
+  ]
+}

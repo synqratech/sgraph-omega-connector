@@ -1,0 +1,20 @@
+{
+  "request_id": "req-004",
+  "tenant_id": "tenant-acme",
+  "risk_score": 63,
+  "verdict": "quarantine",
+  "reasons": [
+    "chunk_synergy_pair",
+    "reason_spike"
+  ],
+  "evidence_id": "5034de49-7f08-4b70-b50f-18db4f8a62d8",
+  "policy_trace": {
+    "off": true,
+    "severity": "L2",
+    "walls_triggered": [
+      "override_instructions",
+      "tool_or_action_abuse"
+    ],
+    "source": "omega"
+  }
+}

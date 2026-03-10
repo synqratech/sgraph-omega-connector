@@ -1,0 +1,16 @@
+api:
+  security:
+    transport_mode: proxy_tls
+    require_https: true
+  auth:
+    api_keys:
+      - dev-api-key
+    require_hmac: true
+    hmac_secret_env: OMEGA_API_HMAC_SECRET
+    hmac_headers:
+      signature: X-Signature
+      timestamp: X-Timestamp
+      nonce: X-Nonce
+  limits:
+    max_file_bytes: 20971520
+    max_extracted_text_chars: 200000

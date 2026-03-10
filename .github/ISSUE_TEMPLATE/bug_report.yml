@@ -1,0 +1,48 @@
+name: Bug report
+description: Report a reproducible problem
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please include reproducible details.
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened?
+      description: Describe expected vs actual behavior.
+      placeholder: Expected ..., but got ...
+    validations:
+      required: true
+  - type: textarea
+    id: repro_steps
+    attributes:
+      label: Reproduction steps
+      description: Share exact commands or API calls.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Connector version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: OS, Python, Docker/Compose versions.
+      placeholder: Ubuntu 24.04, Python 3.12, Docker 27.x
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (redacted)
+      description: Include relevant logs only. Remove secrets/plaintext.
