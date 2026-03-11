@@ -155,12 +155,6 @@ Use it to prepare independent PRs for:
 - [SECURITY.md](SECURITY.md) - vulnerability disclosure policy.
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) - community behavior standards.
 
-## Open-source readiness
-
-Before public release, run checklist from:
-
-- [docs/OPEN_SOURCE_PUBLISHING_GUIDE.md](docs/OPEN_SOURCE_PUBLISHING_GUIDE.md)
-
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
