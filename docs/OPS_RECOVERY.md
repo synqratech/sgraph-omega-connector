@@ -1,41 +1,41 @@
 # Ops Recovery Runbook
 
-Runbook для оперативного восстановления интеграции `connector -> omega` в локальном single-host окружении.
+Runbook for оперативный recovery of the `connector -> omega` integration in a local single-host environment.
 
-Рабочая директория:
+Working directory:
 
 ```bash
 cd <repo-root>/sgraph-omega-connector
-```
+````
 
-## 1) Быстрый triage (2-3 минуты)
+## 1) Quick triage (2–3 minutes)
 
 ```bash
 make health
 make omega-logs
 ```
 
-- Если `connector` и `sgraph_docs` = `ok`, а `omega` = `fail`, проблема локализована в `omega-api`.
-- Если `omega` = `ok`, но в ответах много fallback `omega_timeout/omega_unavailable`, проверяем нагрузку и настройки workers/threads.
+* If `connector` and `sgraph_docs` = `ok`, but `omega` = `fail`, the issue is localized in `omega-api`.
+* If `omega` = `ok`, but responses contain many `omega_timeout/omega_unavailable` fallbacks, check load and the workers/threads settings.
 
-## 2) Чеклист `X -> Y`
+## 2) `X -> Y` checklist
 
-| X (симптом) | Y (действие) |
-|---|---|
-| `omega: fail (The read operation timed out)` в `make health` | `make omega-restart` -> подождать 20-30 сек -> `make health` |
-| В `connector` часто `reasons=["omega_timeout"]` | Увеличить `OMEGA_UVICORN_WORKERS` до `3` или `4` в `env/.env.local.example`, затем `make omega-restart` |
-| После таймаутов сразу начинается `omega_unavailable` | Проверить `/omega/healthz`; если timeout -> `make omega-restart` |
-| `omega_rejected_4xx` + `upstream_detail_code=invalid_file_base64` | Исправить входной payload на стороне отправителя (`file_base64`) |
-| `omega_rejected_4xx` + `upstream_detail_code=extracted_text_too_large` | Ограничить `extracted_text` или отправлять файл вместо текста |
-| `413 Request Entity Too Large` (HTML от nginx) | `make proxy-recreate` -> `make probe-body-limit` |
-| После рестарта Omega долго не готов | Подождать до 60 сек и повторить `make health` |
-| Под нагрузкой p95 растет и появляется fallback | Снизить нагрузку, оставить `OMEGA_OMP_NUM_THREADS=1`, `OMEGA_OPENBLAS_NUM_THREADS=1`, поднять workers |
-| `make smoke` показывает только `quarantine` | Сначала восстановить `omega` (health), потом повторить smoke |
-| Omega не восстанавливается > 5 минут | `make down` -> `make up` -> `make health` |
+| X (symptom)                                                            | Y (action)                                                                                                |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `omega: fail (The read operation timed out)` in `make health`          | `make omega-restart` -> wait 20–30 sec -> `make health`                                                   |
+| `reasons=["omega_timeout"]` appears frequently in `connector`          | Increase `OMEGA_UVICORN_WORKERS` to `3` or `4` in `env/.env.local.example`, then run `make omega-restart` |
+| `omega_unavailable` starts immediately after timeouts                  | Check `/omega/healthz`; if it times out -> `make omega-restart`                                           |
+| `omega_rejected_4xx` + `upstream_detail_code=invalid_file_base64`      | Fix the input payload on the sender side (`file_base64`)                                                  |
+| `omega_rejected_4xx` + `upstream_detail_code=extracted_text_too_large` | Limit `extracted_text` or send a file instead of text                                                     |
+| `413 Request Entity Too Large` (HTML from nginx)                       | `make proxy-recreate` -> `make probe-body-limit`                                                          |
+| Omega takes a long time to become ready after restart                  | Wait up to 60 sec and run `make health` again                                                             |
+| Under load, p95 increases and fallback appears                         | Reduce the load, keep `OMEGA_OMP_NUM_THREADS=1`, `OMEGA_OPENBLAS_NUM_THREADS=1`, increase workers         |
+| `make smoke` shows only `quarantine`                                   | First recover `omega` (health), then rerun smoke                                                          |
+| Omega does not recover for more than 5 minutes                         | `make down` -> `make up` -> `make health`                                                                 |
 
-## 3) Команды восстановления
+## 3) Recovery commands
 
-### A. Стандартное восстановление
+### A. Standard recovery
 
 ```bash
 make health
@@ -44,16 +44,16 @@ make health
 make smoke
 ```
 
-### B. Точечная диагностика Omega
+### B. Targeted Omega diagnostics
 
 ```bash
 make omega-logs
 curl -k -m 12 -sS -w "\nHTTP:%{http_code}\n" https://localhost:8088/omega/healthz
 ```
 
-### C. Тюнинг runtime (single-host)
+### C. Runtime tuning (single-host)
 
-В `env/.env.local.example`:
+In `env/.env.local.example`:
 
 ```dotenv
 OMEGA_UVICORN_WORKERS=3
@@ -61,20 +61,20 @@ OMEGA_OMP_NUM_THREADS=1
 OMEGA_OPENBLAS_NUM_THREADS=1
 ```
 
-Применение:
+Apply changes:
 
 ```bash
 make omega-restart
 make health
 ```
 
-## 4) Сигналы, что нужно эскалировать
+## 4) Signals that escalation is needed
 
-- `omega` регулярно падает в timeout даже на `healthz` после рестарта.
-- Стабильно высокий fallback-rate на benign трафике.
-- После `make down && make up` поведение не улучшается.
+* `omega` keeps timing out regularly even on `healthz` after restart.
+* Consistently high fallback rate on benign traffic.
+* Behavior does not improve after `make down && make up`.
 
-В этом случае собираем:
+In this case, collect:
 
 ```bash
 make omega-logs
@@ -82,4 +82,4 @@ make health
 make smoke
 ```
 
-И прикладываем вывод к инциденту.
+And attach the output to the incident.
